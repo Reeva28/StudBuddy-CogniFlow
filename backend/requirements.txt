@@ -1,0 +1,50 @@
+# FastAPI and ASGI server
+fastapi==0.103.1
+uvicorn==0.23.2
+
+# Database
+sqlalchemy==2.0.20
+alembic==1.12.0
+
+# Authentication
+python-jose==3.3.0
+passlib==1.7.4
+bcrypt==4.0.1
+python-multipart==0.0.6
+
+# Utilities
+pydantic==2.3.0
+pydantic-settings==2.0.3
+email-validator==2.0.0
+python-dotenv==1.0.0
+
+# Document processing
+PyPDF2==3.0.1
+python-docx==0.8.11
+
+# Text Processing & ML
+numpy==1.24.3
+scikit-learn==1.3.0
+nltk==3.8.1
+# sentence-transformers==2.2.2  # Optional - causes DLL issues on Windows, fallback to TF-IDF
+
+# AI APIs
+openai==0.28.0
+google-generativeai==0.3.1
+groq==0.4.1
+
+# Cache and Rate Limiting
+redis==4.6.0
+
+# Testing
+pytest==7.4.2
+pytest-asyncio==0.21.1
+httpx==0.25.0
+
+# Logging
+loguru==0.7.2
+
+# Concept Mapping
+networkx==3.1
+matplotlib==3.7.2
+pillow==10.0.0  # Required for matplotlib image saving
