@@ -3,7 +3,7 @@ Configuration settings for the CogniFlow application
 """
 import os
 from typing import Any, Dict, List, Optional, Union
-from pydantic import AnyHttpUrl, PostgresDsn, field_validator
+from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -17,12 +17,10 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001"]
 
     # Database configuration
-    DATABASE_URL: Optional[str] = os.getenv("DATABASE_URL", "sqlite:///./app.db")
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgres"
-    POSTGRES_DB: str = "cogniflow"
-    SQLALCHEMY_DATABASE_URI: Optional[str] = None
+    DATABASE_URL: Optional[str] = os.getenv(
+        "DATABASE_URL",
+        "sqlite:///./app.db"
+    )
     
     # AI API Keys
     OPENAI_API_KEY: str = "your-openai-api-key"
@@ -44,28 +42,6 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-
-    @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
-    def assemble_db_connection(cls, v: Optional[str], info) -> Any:
-        if isinstance(v, str):
-            return v
-            
-        # Access values from the model data
-        values = info.data
-            
-        if values.get("DATABASE_URL", "").startswith("sqlite"):
-            return values.get("DATABASE_URL")
-        try:
-            return PostgresDsn.build(
-                scheme="postgresql",
-                username=values.get("POSTGRES_USER"),
-                password=values.get("POSTGRES_PASSWORD"),
-                host=values.get("POSTGRES_SERVER"),
-                path=f"{values.get('POSTGRES_DB') or ''}",
-            )
-        except Exception:
-            # Fallback to SQLite
-            return values.get("DATABASE_URL")
     
     # Project name
     PROJECT_NAME: str = "CogniFlow"
