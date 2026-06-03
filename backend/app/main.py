@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.api import api_router
 from app.core.config import settings
 
+from app.db.init_db import init_db
+
 app = FastAPI(
     title="CogniFlow API",
     description="API for the CogniFlow study companion application",
@@ -27,3 +29,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 @app.get("/")
 async def root():
     return {"message": "Welcome to CogniFlow API. See /docs for API documentation."}
+
+@app.on_event("startup")
+async def startup_event():
+    init_db()

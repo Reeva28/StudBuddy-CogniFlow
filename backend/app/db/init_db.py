@@ -2,6 +2,7 @@
 Database initialization script
 """
 from app.db.session import Base, engine
+from app.db import models
 
 def init_db():
     """
