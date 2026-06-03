@@ -167,13 +167,6 @@ export default function Home() {
             >
               {authLoading ? 'Signing in...' : 'Sign In'}
             </button>
-
-            <div className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
-              <p>Demo Credentials:</p>
-              <p className="font-mono text-xs mt-1">
-                test@example.com / testpassword
-              </p>
-            </div>
           </form>
         )}
 
