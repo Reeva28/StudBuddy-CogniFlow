@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cogniflow-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - API_V1_STR=/api/v1
+      - SECRET_KEY=${SECRET_KEY:-your-super-secret-key-change-this-in-production}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=11520
+      - ALGORITHM=HS256
+      - DATABASE_URL=sqlite:///./app.db
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost","http://frontend:3000"]
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./backend/app.db:/app/app.db
+      - ./backend/uploads:/app/uploads
+    networks:
+      - cogniflow-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cogniflow-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_API_VERSION=/api/v1
+    depends_on:
+      - backend
+    networks:
+      - cogniflow-network
+    restart: unless-stopped
+
+networks:
+  cogniflow-network:
+    driver: bridge
+
+volumes:
+  backend-data:

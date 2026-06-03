@@ -140,6 +140,42 @@ async def get_document_summary(
     
     return summary
 
+@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_document(
+    document_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Delete a document and its associated data
+    """
+    document = db.query(models.Document).filter(
+        models.Document.id == document_id,
+        models.Document.user_id == current_user.id
+    ).first()
+    
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document with ID {document_id} not found"
+        )
+    
+    # Delete associated summary
+    db.query(models.DocumentSummary).filter(
+        models.DocumentSummary.document_id == document_id
+    ).delete()
+    
+    # Delete associated flashcards
+    db.query(models.Flashcard).filter(
+        models.Flashcard.document_id == document_id
+    ).delete()
+    
+    # Delete the document
+    db.delete(document)
+    db.commit()
+    
+    return None
+
 @router.post("/{document_id}/flashcards", response_model=List[schemas.Flashcard])
 async def create_flashcards(
     document_id: int,

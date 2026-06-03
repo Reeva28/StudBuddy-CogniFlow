@@ -29,13 +29,16 @@ def get_notes_by_user(
         .all()
 
 def get_notes_by_session(
-    db: Session, session_id: int, skip: int = 0, limit: int = 100
+    db: Session, session_id: int, user_id: int, skip: int = 0, limit: int = 100
 ) -> List[models.Note]:
     """
-    Get notes for a study session
+    Get notes for a study session (filtered by user for security)
     """
     return db.query(models.Note)\
-        .filter(models.Note.session_id == session_id)\
+        .filter(
+            models.Note.session_id == session_id,
+            models.Note.user_id == user_id
+        )\
         .order_by(models.Note.created_at.desc())\
         .offset(skip)\
         .limit(limit)\

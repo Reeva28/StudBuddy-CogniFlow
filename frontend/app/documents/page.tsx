@@ -297,7 +297,9 @@ export default function DocumentsPage() {
 
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Summary</h3>
-                  <p className="text-gray-700 leading-relaxed">{summary.summary}</p>
+                  <div className="text-gray-700 leading-relaxed whitespace-pre-line">
+                    {summary.summary || 'Summary not available'}
+                  </div>
                 </div>
 
                 {summary.key_points && summary.key_points.length > 0 && (

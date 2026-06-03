@@ -12,6 +12,7 @@ from app.db.session import get_db
 from app.db import models
 from app import schemas
 from app.services.auth import authenticate_user, create_access_token, get_current_user
+from app.services.user import create_user
 
 router = APIRouter()
 
@@ -38,3 +39,20 @@ async def login_for_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/register", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
+async def register_user(
+    user_in: schemas.UserCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Register a new user
+    """
+    try:
+        user = create_user(db, user_in)
+        return user
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )

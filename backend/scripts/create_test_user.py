@@ -11,14 +11,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from app.db.session import SessionLocal
 from app.db import models
 from app.services.auth import get_password_hash
-from app.db.init_db import init_db
 
 def create_user():
-    # First, initialize the database (create all tables)
-    print("Initializing database tables...")
-    init_db()
-    print("Database tables created successfully")
-    
     # Create a session
     db = SessionLocal()
     

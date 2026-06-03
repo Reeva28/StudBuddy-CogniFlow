@@ -25,43 +25,123 @@ class GeminiClient:
             return self._fallback_summary()
             
         try:
+            # Limit content to prevent token overflow
+            content_preview = content[:8000] if len(content) > 8000 else content
+            
             prompt = f"""Analyze the following document and provide a structured summary.
 
 Document:
-{content[:4000]}  # Limit content length
+{content_preview}
 
-Provide a JSON response with the following structure:
+You MUST respond with ONLY a valid JSON object in this exact format (no markdown, no extra text):
 {{
     "summary": "A comprehensive 2-3 paragraph summary of the main content",
     "key_points": ["point 1", "point 2", "point 3", "point 4", "point 5"],
     "main_topics": ["topic 1", "topic 2", "topic 3"],
-    "difficulty_level": "beginner/intermediate/advanced",
+    "difficulty_level": "beginner",
     "estimated_study_time_minutes": 30
 }}
 
-Return ONLY valid JSON, no additional text."""
+Critical: Return ONLY the JSON object above with no code blocks, no markdown, no additional text."""
 
             response = self.model.generate_content(prompt)
             result_text = response.text.strip()
             
-            # Clean up markdown code blocks if present
+            # Remove markdown code blocks if present
             if result_text.startswith("```json"):
                 result_text = result_text.replace("```json", "").replace("```", "").strip()
             elif result_text.startswith("```"):
                 result_text = result_text.replace("```", "").strip()
             
-            return json.loads(result_text)
+            # Try to parse JSON
+            try:
+                parsed_data = json.loads(result_text)
+                # Validate required fields
+                if not isinstance(parsed_data.get("summary"), str):
+                    parsed_data["summary"] = str(parsed_data.get("summary", ""))
+                if not isinstance(parsed_data.get("key_points"), list):
+                    parsed_data["key_points"] = ["Analysis in progress"]
+                if not isinstance(parsed_data.get("main_topics"), list):
+                    parsed_data["main_topics"] = ["General content"]
+                return parsed_data
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON decode error in summary: {str(e)}")
+                logger.error(f"Response text: {result_text[:500]}")
+                
+                # Try to extract summary text even if JSON parsing fails
+                summary_text = ""
+                key_points_list = []
+                
+                # Clean up JSON artifacts from the response
+                cleaned_text = result_text
+                # Remove JSON opening/closing braces
+                cleaned_text = cleaned_text.replace("```json", "").replace("```", "")
+                cleaned_text = cleaned_text.replace("{", "").replace("}", "")
+                
+                # Try to extract summary field
+                if '"summary"' in cleaned_text or "'summary'" in cleaned_text:
+                    try:
+                        # Find the summary value
+                        patterns = [
+                            ('"summary"\\s*:\\s*"([^"]*)"', 1),
+                            ("'summary'\\s*:\\s*'([^']*)'", 1),
+                            ('"summary"\\s*:\\s*"([^"]*)', 1),  # Handle incomplete quotes
+                        ]
+                        
+                        import re
+                        for pattern, group in patterns:
+                            match = re.search(pattern, cleaned_text, re.DOTALL)
+                            if match:
+                                summary_text = match.group(group).strip()
+                                # Clean up escape sequences
+                                summary_text = summary_text.replace('\\n', '\n').replace('\\"', '"')
+                                break
+                        
+                        # If still empty, just take text after "summary":
+                        if not summary_text and ':' in cleaned_text:
+                            parts = cleaned_text.split(':', 1)
+                            if len(parts) > 1:
+                                # Take everything after summary: until we hit another field or end
+                                text_part = parts[1].strip()
+                                # Stop at next field
+                                for field in ['"key_points"', "'key_points'", '"main_topics"', '"difficulty_level"']:
+                                    if field in text_part:
+                                        text_part = text_part.split(field)[0]
+                                summary_text = text_part.strip(' "\'\\n,')
+                                
+                    except Exception as extract_err:
+                        logger.error(f"Error extracting summary: {str(extract_err)}")
+                        pass
+                
+                # If we still don't have a summary, use the cleaned text
+                if not summary_text:
+                    summary_text = cleaned_text.strip()[:500]
+                
+                # Try to extract key points if present
+                if '"key_points"' in result_text or "'key_points'" in result_text:
+                    try:
+                        import re
+                        # Look for array pattern
+                        match = re.search(r'"key_points"\s*:\s*\[(.*?)\]', result_text, re.DOTALL)
+                        if match:
+                            points_str = match.group(1)
+                            # Extract quoted strings
+                            key_points_list = re.findall(r'"([^"]+)"', points_str)
+                    except:
+                        pass
+                
+                if not key_points_list:
+                    key_points_list = ["Key points could not be extracted from this document"]
+                
+                # Return with extracted or cleaned text
+                return {
+                    "summary": summary_text if summary_text else "Unable to generate summary",
+                    "key_points": key_points_list,
+                    "main_topics": ["Content analysis"],
+                    "difficulty_level": "intermediate",
+                    "estimated_study_time_minutes": 30
+                }
             
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON decode error in summary: {str(e)}")
-            # Return structured fallback
-            return {
-                "summary": response.text[:500] if 'response' in locals() else "Summary generation failed",
-                "key_points": ["Key point extraction failed"],
-                "main_topics": ["Topic extraction failed"],
-                "difficulty_level": "intermediate",
-                "estimated_study_time_minutes": 30
-            }
         except Exception as e:
             logger.error(f"Error generating summary: {str(e)}")
             return self._fallback_summary()

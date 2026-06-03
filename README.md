@@ -12,8 +12,11 @@ An intelligent study companion application that leverages artificial intelligenc
 - [Project Structure](#-project-structure)
 - [Technology Stack](#-technology-stack)
 - [Getting Started](#-getting-started)
+  - [Option 1: Docker (Recommended)](#option-1-docker-recommended-easiest-setup-)
+  - [Option 2: Manual Setup](#option-2-manual-setup-for-development)
 - [Commands to Run](#-commands-to-run)
 - [API Documentation](#-api-documentation)
+- [Docker Deployment](DOCKER.md)
 - [License](#-license)
 
 ---
@@ -264,10 +267,39 @@ The backend follows a **clean, layered architecture** pattern:
 
 ## 🚀 Getting Started
 
-### Prerequisites
+You can run CogniFlow in two ways:
 
-Before you begin, ensure you have the following installed:
+### Option 1: Docker (Recommended - Easiest Setup) 🐳
 
+**Prerequisites:**
+- Docker Desktop installed ([Download here](https://www.docker.com/products/docker-desktop))
+- Google Gemini API Key ([Get one here](https://aistudio.google.com/app/apikey))
+
+**Quick Start:**
+```bash
+# 1. Clone the repository
+git clone https://github.com/Reeva28/StudBuddy-CogniFlow.git
+cd StudBuddy-CogniFlow
+
+# 2. Create .env file with your API key
+cp .env.example .env
+# Edit .env and add your GEMINI_API_KEY
+
+# 3. Start everything with Docker Compose
+docker-compose up --build
+
+# 4. Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000/docs
+```
+
+That's it! Both frontend and backend will be running in containers. See [DOCKER.md](DOCKER.md) for detailed Docker documentation.
+
+---
+
+### Option 2: Manual Setup (For Development)
+
+**Prerequisites:**
 - **Python 3.9+** (for backend)
 - **Node.js 16+** and npm/yarn (for frontend)
 - **SQLite** (comes pre-installed with Python, no separate installation needed)
