@@ -66,20 +66,41 @@ export default function DocumentsPage() {
   };
 
   const handleViewSummary = async (docId: number) => {
-    setSelectedDoc(docId);
-    setLoadingSummary(true);
-    setSummary(null);
-    
-    try {
-      const data = await documentsAPI.getSummary(docId);
-      setSummary(data);
-    } catch (error) {
-      console.error('Failed to load summary:', error);
-      alert('Failed to load document summary');
-    } finally {
-      setLoadingSummary(false);
+  setSelectedDoc(docId);
+  setLoadingSummary(true);
+  setSummary(null);
+
+  try {
+    const maxRetries = 5;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const data = await documentsAPI.getSummary(docId);
+        setSummary(data);
+        return;
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          if (attempt < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            continue;
+          }
+
+          alert(
+            "Summary is still being generated. Please wait a few seconds and try again."
+          );
+          return;
+        }
+
+        throw error;
+      }
     }
-  };
+  } catch (error) {
+    console.error("Failed to load summary:", error);
+    alert("Failed to load document summary");
+  } finally {
+    setLoadingSummary(false);
+  }
+};
 
   const handleDelete = async (docId: number) => {
     if (!confirm('Are you sure you want to delete this document?')) return;

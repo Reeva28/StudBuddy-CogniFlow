@@ -119,7 +119,7 @@ def get_recent_sessions(
         result.append(analytics.RecentSession(
             id=session.id,
             title=session.title,
-            subject=session.subject,
+            subject=session.subject or "General",
             start_time=session.start_time,
             end_time=session.end_time,
             actual_duration_minutes=session.actual_duration_minutes,

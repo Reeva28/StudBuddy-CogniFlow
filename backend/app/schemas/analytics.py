@@ -36,7 +36,7 @@ class RecentSession(BaseModel):
     """Recent session summary"""
     id: int
     title: str
-    subject: str
+    subject:  Optional[str] = None
     start_time: Optional[datetime]
     end_time: Optional[datetime]
     actual_duration_minutes: Optional[int]
